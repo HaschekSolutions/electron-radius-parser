@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RADIUS parser for NPS by Haschek Solutions</title>
+
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/radius.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
+
+    <script src="js/jquery.min.js"></script>
+  </head>
+  <body id="main">
+
+      <div class="container">
+
+      <div>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
+            <li role="presentation"><a href="#graphs" aria-controls="graphs" role="tab" data-toggle="tab">Graphs</a></li>
+            <li role="presentation"><a href="#failed" aria-controls="failed" role="tab" data-toggle="tab">Failed logins</a></li>
+            <li role="presentation"><a href="#users" aria-controls="failed" role="tab" data-toggle="tab">Users</a></li>
+        </ul>
+
+        
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="home">
+                    <h2>Choose a month</h2>
+                    <div id="controls"></div>
+                    <h2 id="draghere">or drag your log file here</h2>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="failed">
+                    <div id="errors"><h2>No data yet. Choose a month first</h2></div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="graphs">
+                    <div id="charts"><h2>No data yet. Choose a month first</h2></div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="users">
+                    <h2>No data yet. Choose a month first</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+   
+
+    <script>
+      require('chart.js');
+      Tail = require('tail').Tail;
+      var byAP;
+      var byDay;
+      var byHour;
+      var bySuccess;
+      var tail;
+      
+      function renderByAP(labels, data)
+      {
+        var ctx = document.getElementById("byAP");
+        byAP = new Chart(ctx, {
+            type: 'bar',
+            title:{
+                display: true,
+                text: 'Connections by RADIUS clients'
+            },
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Connections",
+                    backgroundColor: [
+                        '#ff6384',
+                        '#36a2eb',
+                        '#cc65fe',
+                        '#ffce56',
+                        '#002A32',
+                        '#C4A29E',
+                        '#EBA6A9',
+                        '#E9D758',
+                        '#297373',
+                        '#4E598C',
+                        '#2D93AD',
+                        '#FFA2A2',
+                        '#FFCBA2',
+                        '#FFF8A2',
+                        '#A2FFA6',
+                        '#A5A2FF',
+                    ],
+                    data: data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive:false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+
+        console.log(byAP.data.datasets[0].data)
+
+      /*
+        setInterval(function(){
+        // Get a random index point
+        var indexToUpdate = Math.round(Math.random() * byAP.data.datasets[0].data.length);
+        
+        // Update one of the points in the second dataset
+        byAP.data.datasets[0].data[indexToUpdate] = Math.random() * 20000;
+        
+        byAP.update();
+        }, 5000);
+      */
+    }
+
+      function renderByDay(labels, data)
+      {
+        var ctx = document.getElementById("byDay");
+        byDay = new Chart(ctx, {
+            type: 'bar',
+            title:{
+                display: true,
+                text: 'Connections by Day'
+            },
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Connections",
+                    backgroundColor: [
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                    ],
+                    data: data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive:false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+      }
+
+      function renderTimeline(labels, data)
+      {
+        var ctx = document.getElementById("byHour");
+        byHour = new Chart(ctx, {
+            type: 'bar',
+            title:{
+                display: true,
+                text: 'Connections over time'
+            },
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Connections",
+                    backgroundColor: [
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                        '#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb','#36a2eb',
+                    ],
+                    data: data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+            
+            responsive:false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+      }
+
+      function renderOU(labels, data)
+      {
+        var ctx = document.getElementById("byOU");
+        var byAP = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [
+                {
+                    data: data,
+                    backgroundColor: [
+                        "#FF6384",
+                        "#36A2EB",
+                        "#FFCE56"
+                    ],
+                    hoverBackgroundColor: [
+                        "#FF6384",
+                        "#36A2EB",
+                        "#FFCE56"
+                    ]
+                }]
+            }
+        });
+      }
+
+      function renderSuccess(data)
+      {
+        var ctx = document.getElementById("bySuccess");
+        bySuccess = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Rejected','Accepted'],
+                datasets: [
+                {
+                    data: data,
+                    backgroundColor: [
+                        "#FF6384",
+                        "#36A2EB"
+                    ],
+                    hoverBackgroundColor: [
+                        "#FF6384",
+                        "#36A2EB"
+                    ]
+                }]
+            }
+        });
+      }
+
+    </script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery.min.js"></script>
+    
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/radius_functions.js"></script>
+    <script src="js/core_functions.js"></script>
+
+    <script src="js/controller.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

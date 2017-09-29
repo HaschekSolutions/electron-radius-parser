@@ -1,0 +1,33 @@
+{
+  "name": "radius-parser",
+  "version": "0.1.10",
+  "description": "Parses NPS log files and prints nice stats and graphs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "keywords": [
+    "RADIUS",
+    "NPS",
+    "log parser"
+  ],
+  "author": "Haschek Solutions",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^1.4.1"
+  },
+  "dependencies": {
+    "chart.js": "^2.5.0",
+    "glob": "^7.1.1",
+    "tail": "^1.2.1",
+    "moment":"^2.17.1"
+  },
+  "build": {
+    "appId": "hascheksolutions.radius",
+    "mac": {
+      "category": "radius.parser"
+    }
+  }
+}
